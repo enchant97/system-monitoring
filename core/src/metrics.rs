@@ -25,3 +25,9 @@ pub struct MemoryMetrics {
     pub perc_used: Percent,
     pub detailed: Option<MemoryDetailedMetrics>,
 }
+
+#[derive(Debug, Serialize)]
+pub struct Metrics {
+    pub cpu: CpuMetrics,
+    pub memory: MemoryMetrics,
+}

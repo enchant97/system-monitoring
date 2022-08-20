@@ -1,5 +1,7 @@
 use actix_web::{get, web, App, HttpServer, Responder};
-use monitoring_core::metrics::{CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics};
+use monitoring_core::metrics::{
+    CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
+};
 use psutil::cpu::CpuPercentCollector;
 use std::sync::Mutex;
 
@@ -35,6 +37,17 @@ impl CollectorState {
     }
 }
 
+#[get("/")]
+async fn get_all(collector: web::Data<CollectorState>) -> actix_web::Result<impl Responder> {
+    let cpu_metrics = collector.get_cpu_metrics();
+    let memory_metrics = collector.get_memory_metrics();
+    let metrics = Metrics {
+        cpu: cpu_metrics,
+        memory: memory_metrics,
+    };
+    Ok(web::Json(metrics))
+}
+
 #[get("/cpu")]
 async fn get_cpu(collector: web::Data<CollectorState>) -> actix_web::Result<impl Responder> {
     let cpu_metrics = collector.get_cpu_metrics();
@@ -56,6 +69,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
+            .service(get_all)
             .service(get_cpu)
             .service(get_memory)
     })
