@@ -3,8 +3,10 @@ use monitoring_core::metrics::{CpuMetrics, MemoryMetrics, Metrics};
 use psutil::cpu::CpuPercentCollector;
 use std::sync::Mutex;
 
+mod config;
 mod state;
 
+use config::{read_config_or_defaults, CONFIG_FN};
 use state::CollectorState;
 
 #[get("/")]
@@ -38,6 +40,12 @@ async fn main() -> std::io::Result<()> {
         cpu_collector: Mutex::new(CpuPercentCollector::new().unwrap()),
     });
 
+    let config_path = std::path::PathBuf::from(CONFIG_FN);
+    let config = match config_path.is_file() {
+        true => read_config_or_defaults(&config_path),
+        false => Default::default(),
+    };
+
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
@@ -45,7 +53,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_cpu)
             .service(get_memory)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((config.host, config.port))?
     .run()
     .await
 }
