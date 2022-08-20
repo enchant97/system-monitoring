@@ -1,41 +1,11 @@
 use actix_web::{get, web, web::Json, App, HttpServer};
-use monitoring_core::metrics::{
-    CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
-};
+use monitoring_core::metrics::{CpuMetrics, MemoryMetrics, Metrics};
 use psutil::cpu::CpuPercentCollector;
 use std::sync::Mutex;
 
-struct CollectorState {
-    cpu_collector: Mutex<CpuPercentCollector>,
-}
+mod state;
 
-impl CollectorState {
-    fn get_cpu_metrics(&self) -> CpuMetrics {
-        let mut cpu = self.cpu_collector.lock().unwrap();
-
-        let cpu_metrics = CpuMetrics {
-            load: Some(CpuLoadMetric {
-                average: cpu.cpu_percent().unwrap(),
-                per_core: Some(cpu.cpu_percent_percpu().unwrap()),
-            }),
-        };
-        cpu_metrics
-    }
-    fn get_memory_metrics(&self) -> MemoryMetrics {
-        let memory = psutil::memory::virtual_memory().unwrap();
-
-        let memory_metrics = MemoryMetrics {
-            perc_used: memory.percent(),
-            detailed: Some(MemoryDetailedMetrics {
-                total: memory.total(),
-                available: memory.available(),
-                used: memory.used(),
-                free: memory.free(),
-            }),
-        };
-        memory_metrics
-    }
-}
+use state::CollectorState;
 
 #[get("/")]
 async fn get_all(collector: web::Data<CollectorState>) -> actix_web::Result<Json<Metrics>> {
