@@ -1,6 +1,11 @@
-use actix_web::{get, web, web::Json, App, HttpServer};
+use actix_web::{
+    dev::Payload, error::ErrorUnauthorized, get, web, web::Json, App, Error, FromRequest,
+    HttpRequest, HttpServer,
+};
+use core::future::Future;
 use monitoring_core::metrics::{CpuMetrics, MemoryMetrics, Metrics};
 use psutil::cpu::CpuPercentCollector;
+use std::pin::Pin;
 use std::sync::Mutex;
 
 mod config;
@@ -9,8 +14,31 @@ mod state;
 use config::{read_config_or_defaults, CONFIG_FN};
 use state::CollectorState;
 
+struct Client {
+    authenticated: bool,
+}
+
+impl FromRequest for Client {
+    type Error = Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Client, Error>>>>;
+
+    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
+        // TODO do auth here if enabled, see below example
+        // Box::pin(async { return Err(ErrorUnauthorized("")) })
+
+        Box::pin(async {
+            return Ok(Client {
+                authenticated: false,
+            });
+        })
+    }
+}
+
 #[get("/")]
-async fn get_all(collector: web::Data<CollectorState>) -> actix_web::Result<Json<Metrics>> {
+async fn get_all(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<Metrics>> {
     let cpu_metrics = collector.get_cpu_metrics();
     let memory_metrics = collector.get_memory_metrics();
     let metrics = Metrics {
@@ -21,13 +49,17 @@ async fn get_all(collector: web::Data<CollectorState>) -> actix_web::Result<Json
 }
 
 #[get("/cpu")]
-async fn get_cpu(collector: web::Data<CollectorState>) -> actix_web::Result<Json<CpuMetrics>> {
+async fn get_cpu(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<CpuMetrics>> {
     let cpu_metrics = collector.get_cpu_metrics();
     Ok(Json(cpu_metrics))
 }
 
 #[get("/memory")]
 async fn get_memory(
+    _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<MemoryMetrics>> {
     let memory_metrics = collector.get_memory_metrics();
