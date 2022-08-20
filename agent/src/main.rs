@@ -1,4 +1,4 @@
-use actix_web::{get, web, App, HttpServer, Responder};
+use actix_web::{get, web, web::Json, App, HttpServer};
 use monitoring_core::metrics::{
     CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
 };
@@ -38,26 +38,28 @@ impl CollectorState {
 }
 
 #[get("/")]
-async fn get_all(collector: web::Data<CollectorState>) -> actix_web::Result<impl Responder> {
+async fn get_all(collector: web::Data<CollectorState>) -> actix_web::Result<Json<Metrics>> {
     let cpu_metrics = collector.get_cpu_metrics();
     let memory_metrics = collector.get_memory_metrics();
     let metrics = Metrics {
         cpu: cpu_metrics,
         memory: memory_metrics,
     };
-    Ok(web::Json(metrics))
+    Ok(Json(metrics))
 }
 
 #[get("/cpu")]
-async fn get_cpu(collector: web::Data<CollectorState>) -> actix_web::Result<impl Responder> {
+async fn get_cpu(collector: web::Data<CollectorState>) -> actix_web::Result<Json<CpuMetrics>> {
     let cpu_metrics = collector.get_cpu_metrics();
-    Ok(web::Json(cpu_metrics))
+    Ok(Json(cpu_metrics))
 }
 
 #[get("/memory")]
-async fn get_memory(collector: web::Data<CollectorState>) -> actix_web::Result<impl Responder> {
+async fn get_memory(
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<MemoryMetrics>> {
     let memory_metrics = collector.get_memory_metrics();
-    Ok(web::Json(memory_metrics))
+    Ok(Json(memory_metrics))
 }
 
 #[actix_web::main]
