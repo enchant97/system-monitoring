@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 pub const CONFIG_FN: &str = "agent.toml";
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct AuthenticationConfig {
     pub check_ip: bool,
@@ -24,12 +24,13 @@ impl Default for AuthenticationConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct Config {
     pub host: String,
     pub port: u16,
     pub using_proxy: bool,
+    pub authentication: AuthenticationConfig,
 }
 
 impl Default for Config {
@@ -38,6 +39,7 @@ impl Default for Config {
             host: "127.0.0.1".to_string(),
             port: 9090,
             using_proxy: false,
+            authentication: Default::default(),
         }
     }
 }
