@@ -17,18 +17,17 @@ fn ip_allowed(client_ip: String, allowed_ips: &[String]) -> bool {
         .any(|current_ip| client_ip.eq(current_ip))
 }
 
-fn auth_value_allowed(value: Option<&HeaderValue>, allowed_keys: &[String]) -> bool {
+/// Checks a authorization header value ensuring it is valid
+fn auth_value_allowed(value: Option<&HeaderValue>, allowed_keys: &[String]) -> Option<()> {
     // Valid value will look like: 'Bearer key'
-    match value {
-        Some(v) => {
-            // TODO remove unwrap usage
-            let mut key_value = v.to_str().unwrap().to_owned();
-            key_value = key_value.strip_prefix("Bearer").unwrap().trim().to_owned();
-            allowed_keys
-                .iter()
-                .any(|current_key| key_value.eq(current_key))
-        }
-        None => false,
+    let value = value?;
+    let value = value.to_str().ok()?;
+    let value = &value.strip_prefix("Bearer")?;
+    let value = value.trim().to_owned();
+    // Check key value is in allowed keys
+    match allowed_keys.iter().any(|current_key| value.eq(current_key)) {
+        true => Some(()),
+        false => None,
     }
 }
 
@@ -54,10 +53,7 @@ impl FromRequest for Client {
             (false, false) => Some(false), // auth is not needed as it's disabled
             (false, true) => {
                 // only key authentication is required
-                match auth_value_allowed(authorization_value, &auth_config.allowed_keys) {
-                    true => Some(true),
-                    false => None,
-                }
+                auth_value_allowed(authorization_value, &auth_config.allowed_keys).map(|()| true)
             }
             (true, false) => {
                 // only client ip check is required
@@ -72,7 +68,7 @@ impl FromRequest for Client {
                     auth_value_allowed(authorization_value, &auth_config.allowed_keys),
                     ip_allowed(client_ip, &auth_config.allowed_ip),
                 ) {
-                    (true, true) => Some(true),
+                    (Some(()), true) => Some(true),
                     _ => None,
                 }
             }
