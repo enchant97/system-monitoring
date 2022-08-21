@@ -31,23 +31,25 @@ fn auth_value_allowed(value: Option<&HeaderValue>, allowed_keys: &[String]) -> O
     }
 }
 
+fn get_client_ip(config: &Config, req: &HttpRequest) -> Option<String> {
+    match config.using_proxy {
+        false => Some(req.connection_info().peer_addr()?.to_string()),
+        true => Some(req.connection_info().realip_remote_addr()?.to_string()),
+    }
+}
+
 impl FromRequest for Client {
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Client, Error>>>>;
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
-        let config = req.app_data::<Config>().unwrap();
+        let config = req
+            .app_data::<Config>()
+            .expect("Client app_data Config must not be None");
         let auth_config = &config.authentication;
         let authorization_value = req.headers().get("Authorization");
         // get the clients ip address
-        let client_ip = match config.using_proxy {
-            false => req.connection_info().peer_addr().unwrap().to_string(),
-            true => req
-                .connection_info()
-                .realip_remote_addr()
-                .unwrap()
-                .to_string(),
-        };
+        let client_ip = get_client_ip(config, req);
         // ensures client is allowed
         let authenticated = match (auth_config.check_ip, auth_config.check_key) {
             (false, false) => Some(false), // auth is not needed as it's disabled
@@ -57,19 +59,25 @@ impl FromRequest for Client {
             }
             (true, false) => {
                 // only client ip check is required
-                match ip_allowed(client_ip, &auth_config.allowed_ip) {
-                    true => Some(true),
-                    false => None,
+                match client_ip {
+                    Some(ip) => match ip_allowed(ip, &auth_config.allowed_ip) {
+                        true => Some(true),
+                        false => None,
+                    },
+                    None => None,
                 }
             }
             (true, true) => {
                 // both key authentication and client ip is required
-                match (
-                    auth_value_allowed(authorization_value, &auth_config.allowed_keys),
-                    ip_allowed(client_ip, &auth_config.allowed_ip),
-                ) {
-                    (Some(()), true) => Some(true),
-                    _ => None,
+                match client_ip {
+                    Some(ip) => match (
+                        auth_value_allowed(authorization_value, &auth_config.allowed_keys),
+                        ip_allowed(ip, &auth_config.allowed_ip),
+                    ) {
+                        (Some(()), true) => Some(true),
+                        _ => None,
+                    },
+                    None => None,
                 }
             }
         };
