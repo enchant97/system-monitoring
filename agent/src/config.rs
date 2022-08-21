@@ -4,6 +4,11 @@ use std::path::PathBuf;
 
 pub const CONFIG_FN: &str = "agent.toml";
 
+pub enum ConfigError {
+    ReadError,
+    ParseError,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct AuthenticationConfig {
@@ -44,12 +49,13 @@ impl Default for Config {
     }
 }
 
-pub fn read_config_toml(path: &PathBuf) -> Config {
-    // FIXME remove unwrap
-    let raw = read_to_string(path).unwrap();
-    toml::from_str(&raw).unwrap()
-}
-
-pub fn read_config_or_defaults(path: &PathBuf) -> Config {
-    read_config_toml(path)
+/// Read the agent config from a TOML file
+pub fn read_config_toml(path: &PathBuf) -> Result<Config, ConfigError> {
+    match read_to_string(path) {
+        Ok(raw) => match toml::from_str(&raw) {
+            Ok(config) => Ok(config),
+            Err(_) => Err(ConfigError::ParseError),
+        },
+        Err(_) => Err(ConfigError::ReadError),
+    }
 }

@@ -7,7 +7,7 @@ mod config;
 mod extractor;
 mod state;
 
-use config::{read_config_or_defaults, Config, CONFIG_FN};
+use config::{read_config_toml, Config, CONFIG_FN};
 use extractor::Client;
 use state::CollectorState;
 
@@ -46,19 +46,26 @@ async fn get_memory(
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
-
+    // Init metric collector
     let collector = web::Data::new(CollectorState {
         cpu_collector: Mutex::new(CpuPercentCollector::new().unwrap()),
     });
-
+    // Load agent config
     let config_path = std::path::PathBuf::from(CONFIG_FN);
     let config: Config = match config_path.is_file() {
-        true => read_config_or_defaults(&config_path),
+        true => match read_config_toml(&config_path) {
+            Ok(v) => v,
+            Err(_) => {
+                log::warn!("config file could not be read, falling back to defaults");
+                Default::default()
+            }
+        },
         false => {
-            log::warn!("config file could not be read, falling back to defaults");
+            log::warn!("config file could not be found, falling back to defaults");
             Default::default()
         }
     };
+    // Create the HTTP server
     let bind = (config.host.clone(), config.port);
     HttpServer::new(move || {
         App::new()
