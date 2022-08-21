@@ -1,5 +1,5 @@
 use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
-use monitoring_core::metrics::{CpuMetrics, MemoryMetrics, Metrics};
+use monitoring_core::metrics;
 use psutil::cpu::CpuPercentCollector;
 use std::sync::Mutex;
 
@@ -15,32 +15,77 @@ use state::CollectorState;
 async fn get_all(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<Metrics>> {
+) -> actix_web::Result<Json<metrics::Metrics>> {
     let cpu_metrics = collector.get_cpu_metrics();
     let memory_metrics = collector.get_memory_metrics();
-    let metrics = Metrics {
+    let metrics = metrics::Metrics {
         cpu: cpu_metrics,
         memory: memory_metrics,
     };
     Ok(Json(metrics))
 }
 
-#[get("/cpu")]
+#[get("/")]
 async fn get_cpu(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<CpuMetrics>> {
+) -> actix_web::Result<Json<metrics::CpuMetrics>> {
     let cpu_metrics = collector.get_cpu_metrics();
     Ok(Json(cpu_metrics))
 }
 
-#[get("/memory")]
+#[get("/")]
+async fn get_cpu_load(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<metrics::CpuLoadMetric>> {
+    let load = collector.get_cpu_metrics().load.unwrap();
+    Ok(Json(load))
+}
+
+#[get("/average")]
+async fn get_cpu_load_average(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<monitoring_core::Percent>> {
+    let load = collector.get_cpu_metrics().load.unwrap();
+    Ok(Json(load.average))
+}
+
+#[get("/per-core")]
+async fn get_cpu_load_per_core(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<Vec<monitoring_core::Percent>>> {
+    let load = collector.get_cpu_metrics().load.unwrap();
+    Ok(Json(load.per_core.unwrap()))
+}
+
+#[get("/")]
 async fn get_memory(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<MemoryMetrics>> {
+) -> actix_web::Result<Json<metrics::MemoryMetrics>> {
     let memory_metrics = collector.get_memory_metrics();
     Ok(Json(memory_metrics))
+}
+
+#[get("/perc-used")]
+async fn get_memory_perc_used(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<monitoring_core::Percent>> {
+    let memory_metrics = collector.get_memory_metrics();
+    Ok(Json(memory_metrics.perc_used))
+}
+
+#[get("/detailed")]
+async fn get_memory_detailed(
+    _client: Client,
+    collector: web::Data<CollectorState>,
+) -> actix_web::Result<Json<metrics::MemoryDetailedMetrics>> {
+    let memory_metrics = collector.get_memory_metrics();
+    Ok(Json(memory_metrics.detailed.unwrap()))
 }
 
 #[actix_web::main]
@@ -73,8 +118,20 @@ async fn main() -> std::io::Result<()> {
             .app_data(collector.clone())
             .app_data(config.clone())
             .service(get_all)
-            .service(get_cpu)
-            .service(get_memory)
+            .service(
+                web::scope("/cpu").service(get_cpu).service(
+                    web::scope("/load")
+                        .service(get_cpu_load)
+                        .service(get_cpu_load_average)
+                        .service(get_cpu_load_per_core),
+                ),
+            )
+            .service(
+                web::scope("memory")
+                    .service(get_memory)
+                    .service(get_memory_perc_used)
+                    .service(get_memory_detailed),
+            )
     })
     .bind(bind)?
     .run()

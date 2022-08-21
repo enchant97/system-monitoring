@@ -32,6 +32,11 @@ Authorization: Bearer testing123
 
 ### Routes
 
-#### /
-#### /cpu
-#### /memory
+- /
+  - /cpu/
+    - /load/
+      - /average
+      - /per-core
+  - /memory/
+    - /perc-used
+    - /detailed
