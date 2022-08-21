@@ -1,4 +1,4 @@
-use actix_web::{get, web, web::Json, App, HttpServer};
+use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
 use monitoring_core::metrics::{CpuMetrics, MemoryMetrics, Metrics};
 use psutil::cpu::CpuPercentCollector;
 use std::sync::Mutex;
@@ -45,6 +45,8 @@ async fn get_memory(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+
     let collector = web::Data::new(CollectorState {
         cpu_collector: Mutex::new(CpuPercentCollector::new().unwrap()),
     });
@@ -52,11 +54,15 @@ async fn main() -> std::io::Result<()> {
     let config_path = std::path::PathBuf::from(CONFIG_FN);
     let config: Config = match config_path.is_file() {
         true => read_config_or_defaults(&config_path),
-        false => Default::default(),
+        false => {
+            log::warn!("config file could not be read, falling back to defaults");
+            Default::default()
+        }
     };
     let bind = (config.host.clone(), config.port);
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .app_data(collector.clone())
             .app_data(config.clone())
             .service(get_all)
