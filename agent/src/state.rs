@@ -47,21 +47,21 @@ impl CollectorState {
         };
         memory_metrics
     }
-
-    fn metrics_refresh(&self) -> CapturedMetrics {
+    /// Return new metrics, skipping cache
+    pub fn metrics_skip_cache(&self) -> CapturedMetrics {
         return CapturedMetrics::new_from_now(Metrics {
             cpu: self.get_cpu_metrics(),
             memory: self.get_memory_metrics(),
         });
     }
-
+    /// Return metrics, using cached if valid
     pub fn metrics(&self) -> CapturedMetrics {
-        let mut stored_metrics = self.metrics.lock().unwrap();
+        let mut stored_metrics = self.metrics.lock().expect("cannot lock metrics mutex");
         match &*stored_metrics {
             Some(v) => match v.is_old(self.cache_for) {
                 true => {
                     log::debug!("capturing new metrics, cache old");
-                    let new_metrics = self.metrics_refresh();
+                    let new_metrics = self.metrics_skip_cache();
                     *stored_metrics = Some(new_metrics.clone());
                     new_metrics
                 }
@@ -72,7 +72,7 @@ impl CollectorState {
             },
             None => {
                 log::debug!("capturing new metrics, updating cache");
-                let new_metrics = self.metrics_refresh();
+                let new_metrics = self.metrics_skip_cache();
                 *stored_metrics = Some(new_metrics.clone());
                 new_metrics
             }
