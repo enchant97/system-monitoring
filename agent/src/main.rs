@@ -10,6 +10,11 @@ use config::{read_config_toml, Config, CONFIG_FN};
 use extractor::Client;
 use state::CollectorState;
 
+#[get("/is-healthy")]
+async fn get_is_healthy() -> actix_web::Result<String> {
+    Ok("🆗".to_string())
+}
+
 #[get("/")]
 async fn get_all(
     _client: Client,
@@ -112,6 +117,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .app_data(collector.clone())
             .app_data(config.clone())
+            .service(get_is_healthy)
             .service(get_all)
             .service(
                 web::scope("/cpu").service(get_cpu).service(

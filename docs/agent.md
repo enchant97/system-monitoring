@@ -9,6 +9,8 @@ host="127.0.0.1"
 port=8080
 # enable if using a reverse proxy so real client ip is forwarded
 using_proxy = false
+# duration to cache metrics for future requests in seconds
+cache_for = 2
 
 [authentication]
 # Whether to only allow registed ip's
@@ -33,6 +35,7 @@ Authorization: Bearer testing123
 ### Routes
 
 - /
+  - /is-healthy
   - /cpu/
     - /load/
       - /average
