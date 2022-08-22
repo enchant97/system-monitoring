@@ -14,6 +14,7 @@ pub struct CollectorState {
 
 impl CollectorState {
     pub fn new(cache_for: Duration) -> Self {
+        log::debug!("Captured metrics will cache for '{cache_for:?}'");
         Self {
             cache_for: cache_for,
             metrics: Mutex::new(None),

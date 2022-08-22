@@ -35,6 +35,7 @@ pub struct Config {
     pub host: String,
     pub port: u16,
     pub using_proxy: bool,
+    pub cache_for: u64,
     pub authentication: AuthenticationConfig,
 }
 
@@ -44,6 +45,7 @@ impl Default for Config {
             host: "127.0.0.1".to_string(),
             port: 9090,
             using_proxy: false,
+            cache_for: 1,
             authentication: Default::default(),
         }
     }
