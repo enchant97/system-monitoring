@@ -10,6 +10,12 @@ pub enum ConfigError {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct CertificateConfig {
+    pub private_path: PathBuf,
+    pub public_path: PathBuf,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct AuthenticationConfig {
     pub check_ip: bool,
@@ -36,6 +42,7 @@ pub struct Config {
     pub port: u16,
     pub using_proxy: bool,
     pub cache_for: u64,
+    pub certificate: Option<CertificateConfig>,
     pub authentication: AuthenticationConfig,
 }
 
@@ -46,6 +53,7 @@ impl Default for Config {
             port: 9090,
             using_proxy: false,
             cache_for: 1,
+            certificate: None,
             authentication: Default::default(),
         }
     }

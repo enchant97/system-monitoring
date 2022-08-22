@@ -1,7 +1,7 @@
 use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
 use monitoring_core::metrics;
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::time::Duration;
-
 mod config;
 mod extractor;
 mod state;
@@ -112,7 +112,22 @@ async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(CollectorState::new(Duration::from_secs(config.cache_for)));
     // Create the HTTP server
     let bind = (config.host.clone(), config.port);
-    HttpServer::new(move || {
+    let ssl_builder = match config.certificate {
+        Some(ref v) => {
+            // TODO remove unwrap usage
+            let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+            builder
+                .set_private_key_file(v.private_path.to_str().unwrap(), SslFiletype::PEM)
+                .unwrap();
+            builder
+                .set_certificate_chain_file(v.public_path.to_str().unwrap())
+                .unwrap();
+
+            Some(builder)
+        }
+        None => None,
+    };
+    let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
             .app_data(collector.clone())
@@ -133,8 +148,16 @@ async fn main() -> std::io::Result<()> {
                     .service(get_memory_perc_used)
                     .service(get_memory_detailed),
             )
-    })
-    .bind(bind)?
-    .run()
-    .await
+    });
+
+    match ssl_builder {
+        Some(builder) => {
+            log::info!("serving over HTTPS on: {bind:?}");
+            server.bind_openssl(bind, builder)?.run().await
+        }
+        None => {
+            log::info!("serving over HTTP on: {bind:?}");
+            server.bind(bind)?.run().await
+        }
+    }
 }

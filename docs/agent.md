@@ -12,6 +12,12 @@ using_proxy = false
 # duration to cache metrics for future requests in seconds
 cache_for = 2
 
+[certificates]
+# Path to certificates, enables serving on HTTPS
+# Expects files in PEM format
+private_path = "key.pem"
+public_path = "cert.pem"
+
 [authentication]
 # Whether to only allow registed ip's
 check_ip = true
