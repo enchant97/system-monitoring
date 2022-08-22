@@ -1,7 +1,6 @@
 use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
 use monitoring_core::metrics;
-use psutil::cpu::CpuPercentCollector;
-use std::sync::Mutex;
+use std::time::Duration;
 
 mod config;
 mod extractor;
@@ -16,13 +15,8 @@ async fn get_all(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<metrics::Metrics>> {
-    let cpu_metrics = collector.get_cpu_metrics();
-    let memory_metrics = collector.get_memory_metrics();
-    let metrics = metrics::Metrics {
-        cpu: cpu_metrics,
-        memory: memory_metrics,
-    };
-    Ok(Json(metrics))
+    let captured_metrics = collector.metrics();
+    Ok(Json(captured_metrics.metrics))
 }
 
 #[get("/")]
@@ -30,7 +24,7 @@ async fn get_cpu(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<metrics::CpuMetrics>> {
-    let cpu_metrics = collector.get_cpu_metrics();
+    let cpu_metrics = collector.metrics().metrics.cpu;
     Ok(Json(cpu_metrics))
 }
 
@@ -39,7 +33,7 @@ async fn get_cpu_load(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<metrics::CpuLoadMetric>> {
-    let load = collector.get_cpu_metrics().load.unwrap();
+    let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load))
 }
 
@@ -48,7 +42,7 @@ async fn get_cpu_load_average(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<monitoring_core::Percent>> {
-    let load = collector.get_cpu_metrics().load.unwrap();
+    let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load.average))
 }
 
@@ -57,7 +51,7 @@ async fn get_cpu_load_per_core(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<Vec<monitoring_core::Percent>>> {
-    let load = collector.get_cpu_metrics().load.unwrap();
+    let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load.per_core.unwrap()))
 }
 
@@ -66,7 +60,7 @@ async fn get_memory(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<metrics::MemoryMetrics>> {
-    let memory_metrics = collector.get_memory_metrics();
+    let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics))
 }
 
@@ -75,7 +69,7 @@ async fn get_memory_perc_used(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<monitoring_core::Percent>> {
-    let memory_metrics = collector.get_memory_metrics();
+    let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics.perc_used))
 }
 
@@ -84,7 +78,7 @@ async fn get_memory_detailed(
     _client: Client,
     collector: web::Data<CollectorState>,
 ) -> actix_web::Result<Json<metrics::MemoryDetailedMetrics>> {
-    let memory_metrics = collector.get_memory_metrics();
+    let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics.detailed.unwrap()))
 }
 
@@ -92,9 +86,8 @@ async fn get_memory_detailed(
 async fn main() -> std::io::Result<()> {
     env_logger::init();
     // Init metric collector
-    let collector = web::Data::new(CollectorState {
-        cpu_collector: Mutex::new(CpuPercentCollector::new().unwrap()),
-    });
+    // TODO allow user to customize duration
+    let collector = web::Data::new(CollectorState::new(Duration::from_secs(2)));
     // Load agent config
     let config_path = std::path::PathBuf::from(CONFIG_FN);
     let config: Config = match config_path.is_file() {
