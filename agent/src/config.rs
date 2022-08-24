@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::fs::read_to_string;
+use std::net::IpAddr;
 use std::path::PathBuf;
 
 pub const CONFIG_FN: &str = "agent.toml";
@@ -20,7 +21,7 @@ pub struct CertificateConfig {
 pub struct AuthenticationConfig {
     pub check_ip: bool,
     pub check_key: bool,
-    pub allowed_ip: Vec<String>,
+    pub allowed_ip: Vec<IpAddr>,
     pub allowed_keys: Vec<String>,
 }
 

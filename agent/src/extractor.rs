@@ -1,17 +1,17 @@
+use crate::config::Config;
 use actix_web::{
     dev::Payload, error::ErrorUnauthorized, http::header::HeaderValue, Error, FromRequest,
     HttpRequest,
 };
 use core::future::Future;
+use std::net::IpAddr;
 use std::pin::Pin;
-
-use crate::config::Config;
 
 pub struct Client {
     pub authenticated: bool,
 }
 
-fn ip_allowed(client_ip: String, allowed_ips: &[String]) -> bool {
+fn ip_allowed(client_ip: IpAddr, allowed_ips: &[IpAddr]) -> bool {
     allowed_ips
         .iter()
         .any(|current_ip| client_ip.eq(current_ip))
@@ -31,11 +31,13 @@ fn auth_value_allowed(value: Option<&HeaderValue>, allowed_keys: &[String]) -> O
     }
 }
 
-fn get_client_ip(config: &Config, req: &HttpRequest) -> Option<String> {
-    match config.using_proxy {
-        false => Some(req.connection_info().peer_addr()?.to_string()),
-        true => Some(req.connection_info().realip_remote_addr()?.to_string()),
-    }
+fn get_client_ip(config: &Config, req: &HttpRequest) -> Option<IpAddr> {
+    let ip = match config.using_proxy {
+        false => req.connection_info().peer_addr()?.to_string(),
+        true => req.connection_info().realip_remote_addr()?.to_string(),
+    };
+
+    Some(ip.parse::<IpAddr>().ok()?)
 }
 
 impl FromRequest for Client {
