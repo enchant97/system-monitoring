@@ -15,6 +15,11 @@ async fn get_is_healthy() -> actix_web::Result<String> {
     Ok("🆗".to_string())
 }
 
+#[get("/agent-id")]
+async fn get_agent_id(_client: Client, config: web::Data<Config>) -> actix_web::Result<String> {
+    Ok(config.id.clone())
+}
+
 #[get("/")]
 async fn get_all(
     _client: Client,
@@ -131,8 +136,9 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .app_data(collector.clone())
-            .app_data(config.clone())
+            .app_data(web::Data::new(config.clone()))
             .service(get_is_healthy)
+            .service(get_agent_id)
             .service(get_all)
             .service(
                 web::scope("/cpu").service(get_cpu).service(

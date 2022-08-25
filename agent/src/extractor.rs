@@ -46,7 +46,7 @@ impl FromRequest for Client {
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
         let config = req
-            .app_data::<Config>()
+            .app_data::<actix_web::web::Data<Config>>()
             .expect("Client app_data Config must not be None");
         let auth_config = &config.authentication;
         let authorization_value = req.headers().get("Authorization");
