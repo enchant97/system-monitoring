@@ -13,3 +13,7 @@ openssl = { version = "0.10", features = ["v110"] }
 log = "0.4"
 env_logger = "0.9"
 uuid = { version = "1.1", features = ["v4"]  }
+
+[features]
+default = [ "webhooks"  ]
+webhooks = [ ]

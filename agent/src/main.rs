@@ -95,6 +95,9 @@ async fn get_memory_detailed(
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
+    if !cfg!(feature = "webhooks") {
+        log::info!("built without webhooks");
+    }
     // Load agent config
     let config_path = std::path::PathBuf::from(CONFIG_FN);
     let config: Config = match config_path.is_file() {

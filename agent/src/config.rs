@@ -69,6 +69,7 @@ pub struct Config {
     pub cache_for: u64,
     pub certificate: Option<CertificateConfig>,
     pub authentication: AuthenticationConfig,
+    #[cfg(feature = "webhooks")]
     pub webhooks: WebhooksConfig,
 }
 
@@ -83,6 +84,7 @@ impl Default for Config {
             cache_for: 1,
             certificate: None,
             authentication: Default::default(),
+            #[cfg(feature = "webhooks")]
             webhooks: Default::default(),
         }
     }
