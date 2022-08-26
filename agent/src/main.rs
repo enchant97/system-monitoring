@@ -166,19 +166,24 @@ async fn main() -> std::io::Result<()> {
                     .service(get_memory_detailed),
             )
     });
-
-    // send out on_start webhook
-    #[cfg(feature = "webhooks")]
-    webhook_manager.send_on_start().await;
     // start the server
-    match ssl_builder {
+    let server = match ssl_builder {
         Some(builder) => {
             log::info!("serving over HTTPS on: {bind:?}");
-            server.bind_openssl(bind, builder)?.run().await
+            server.bind_openssl(bind, builder)?.run()
         }
         None => {
             log::info!("serving over HTTP on: {bind:?}");
-            server.bind(bind)?.run().await
+            server.bind(bind)?.run()
         }
+    };
+    // Send on_start webhook and start server, if feature is enabled
+    if cfg!(feature = "webhooks") {
+        // TODO switch to std::futures when it's out of experimental
+        #[cfg(feature = "webhooks")]
+        futures::try_join!(server, async { Ok(webhook_manager.send_on_start().await) })?;
+        Ok(())
+    } else {
+        server.await
     }
 }
