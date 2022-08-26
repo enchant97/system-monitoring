@@ -5,6 +5,8 @@ The agent should be run on each device you want to monitor. If metrics are to be
 The agent app can be configured by a TOML file, this must exist in the directory where the agent is launched. It also must be called `agent.toml`. Example shown below:
 
 ```toml
+# The unique name for the agent, if not given a uuid4 will be generated
+id = "agent-abc123"
 # what ip to bind to, use 0.0.0.0 for all
 host="127.0.0.1"
 # port to listen on
