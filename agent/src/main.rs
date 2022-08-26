@@ -2,13 +2,18 @@ use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
 use monitoring_core::metrics;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::time::Duration;
+
 mod config;
 mod extractor;
 mod state;
+#[cfg(feature = "webhooks")]
+mod webhooks;
 
 use config::{read_config_toml, Config, CONFIG_FN};
 use extractor::Client;
 use state::CollectorState;
+#[cfg(feature = "webhooks")]
+use webhooks::WebhookManager;
 
 #[get("/is-healthy")]
 async fn get_is_healthy() -> actix_web::Result<String> {
@@ -116,6 +121,9 @@ async fn main() -> std::io::Result<()> {
             Default::default()
         }
     };
+    // Init Webhook if feaure is enabled
+    #[cfg(feature = "webhooks")]
+    let webhook_manager = WebhookManager::new(config.clone());
     // Init metric collector
     let collector = web::Data::new(CollectorState::new(Duration::from_secs(config.cache_for)));
     // Create the HTTP server
@@ -159,6 +167,10 @@ async fn main() -> std::io::Result<()> {
             )
     });
 
+    // send out on_start webhook
+    #[cfg(feature = "webhooks")]
+    webhook_manager.send_on_start().await;
+    // start the server
     match ssl_builder {
         Some(builder) => {
             log::info!("serving over HTTPS on: {bind:?}");

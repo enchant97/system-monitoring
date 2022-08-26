@@ -49,7 +49,7 @@ pub struct WebhooksHookConfig {
 #[serde(default)]
 pub struct WebhooksConfig {
     /// Webhook triggered when agent is starting
-    pub on_start: Vec<String>,
+    pub on_start: Vec<WebhooksHookConfig>,
 }
 
 impl Default for WebhooksConfig {
