@@ -2,13 +2,13 @@ use monitoring_core::metrics::{
     CapturedMetrics, CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
 };
 use psutil::cpu::CpuPercentCollector;
-use std::sync::Mutex;
+use std::sync::{Mutex, RwLock};
 use std::time::Duration;
 
 /// Manages gathering metrics
 pub struct CollectorState {
     cache_for: Duration,
-    metrics: Mutex<Option<CapturedMetrics>>,
+    metrics: RwLock<Option<CapturedMetrics>>,
     cpu_collector: Mutex<CpuPercentCollector>,
 }
 
@@ -17,7 +17,7 @@ impl CollectorState {
         log::debug!("Captured metrics will cache for '{cache_for:?}'");
         Self {
             cache_for: cache_for,
-            metrics: Mutex::new(None),
+            metrics: RwLock::new(None),
             cpu_collector: Mutex::new(CpuPercentCollector::new().unwrap()),
         }
     }
@@ -57,26 +57,51 @@ impl CollectorState {
     }
     /// Return metrics, using cached if valid
     pub fn metrics(&self) -> CapturedMetrics {
-        let mut stored_metrics = self.metrics.lock().expect("cannot lock metrics mutex");
-        match &*stored_metrics {
-            Some(v) => match v.is_old(self.cache_for) {
-                true => {
-                    log::debug!("capturing new metrics, cache old");
-                    let new_metrics = self.metrics_skip_cache();
-                    *stored_metrics = Some(new_metrics.clone());
-                    new_metrics
+        let mut metrics_to_return: Option<CapturedMetrics> = None;
+
+        // get existing metrics from cache, if they are still valid
+        {
+            let metrics_cache = self
+                .metrics
+                .read()
+                .expect("cannot gain read lock on metrics cache");
+            match &*metrics_cache {
+                Some(v) => match v.is_old(self.cache_for) {
+                    true => {
+                        log::debug!("metrics capture needed, cache old");
+                    }
+                    false => {
+                        log::debug!("metrics capture skipped, using cached");
+                        metrics_to_return = Some(v.clone());
+                    }
+                },
+                None => {
+                    log::debug!("metrics capture needed, none in cache");
                 }
-                false => {
-                    log::debug!("using cached metrics");
-                    v.clone()
-                }
-            },
-            None => {
-                log::debug!("capturing new metrics, updating cache");
-                let new_metrics = self.metrics_skip_cache();
-                *stored_metrics = Some(new_metrics.clone());
-                new_metrics
-            }
+            };
+        }
+
+        // update cached metrics
+        if metrics_to_return.is_none() {
+            let mut metrics_cache = self
+                .metrics
+                .try_write()
+                .expect("cannot gain write lock on metrics cache");
+            let new_metrics = self.metrics_skip_cache();
+            *metrics_cache = Some(new_metrics);
+            log::debug!("captured new metrics in cache");
+        }
+
+        // either used previously cached value or the newly cached metrics
+        match metrics_to_return {
+            Some(v) => v,
+            None => self
+                .metrics
+                .read()
+                .expect("cannot gain read lock on metrics cache")
+                .as_ref()
+                .expect("metrics cache cannot be None")
+                .clone(),
         }
     }
 }
