@@ -1,17 +1,16 @@
 use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
+use agent_collector::CollectorState;
 use monitoring_core::metrics;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::time::Duration;
 
 mod config;
 mod extractor;
-mod state;
 #[cfg(feature = "webhooks")]
 mod webhooks;
 
 use config::{read_config_toml, Config, CONFIG_FN};
 use extractor::Client;
-use state::CollectorState;
 #[cfg(feature = "webhooks")]
 use webhooks::WebhookManager;
 
