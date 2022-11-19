@@ -4,15 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-agent-core = { path = "../crates/core" }
 agent-collector = { path = "../crates/collector" }
 agent-config = { path = "../crates/config", default-features = false }
+agent-web = { path = "../crates/web" }
 agent-webhooks = { path = "../crates/webhooks", optional = true }
-actix-web = { version = "4.1", features = ["openssl"] }
-openssl = { version = "0.10", features = ["v110"] }
 log = "0.4"
 env_logger = "0.9"
 futures = { version = "0.3", optional = true }
+tokio = { version = "1.22", features=["macros", "rt-multi-thread"]  }
 
 [features]
 default = [ "webhooks" ]

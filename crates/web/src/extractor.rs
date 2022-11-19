@@ -7,7 +7,7 @@ use core::future::Future;
 use std::net::IpAddr;
 use std::pin::Pin;
 
-pub struct Client {
+pub(crate) struct Client {
     pub authenticated: bool,
 }
 
