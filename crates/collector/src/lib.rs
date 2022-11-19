@@ -1,4 +1,4 @@
-use monitoring_core::metrics::{
+use agent_core::metrics::{
     CapturedMetrics, CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
 };
 use psutil::cpu::CpuPercentCollector;

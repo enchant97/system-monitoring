@@ -1,6 +1,6 @@
 use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
 use agent_collector::CollectorState;
-use monitoring_core::metrics;
+use agent_core::metrics;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::time::Duration;
 
@@ -55,7 +55,7 @@ async fn get_cpu_load(
 async fn get_cpu_load_average(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<monitoring_core::Percent>> {
+) -> actix_web::Result<Json<agent_core::Percent>> {
     let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load.average))
 }
@@ -64,7 +64,7 @@ async fn get_cpu_load_average(
 async fn get_cpu_load_per_core(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<Vec<monitoring_core::Percent>>> {
+) -> actix_web::Result<Json<Vec<agent_core::Percent>>> {
     let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load.per_core.unwrap()))
 }
@@ -82,7 +82,7 @@ async fn get_memory(
 async fn get_memory_perc_used(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<monitoring_core::Percent>> {
+) -> actix_web::Result<Json<agent_core::Percent>> {
     let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics.perc_used))
 }

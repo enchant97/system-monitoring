@@ -1,5 +1,5 @@
 use crate::config::{Config, WebhooksHookConfig};
-use monitoring_core::webhooks::BaseBody;
+use agent_core::webhooks::BaseBody;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
