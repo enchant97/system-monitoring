@@ -6,12 +6,10 @@ use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::time::Duration;
 
 mod extractor;
-#[cfg(feature = "webhooks")]
-mod webhooks;
 
-use extractor::Client;
 #[cfg(feature = "webhooks")]
-use webhooks::WebhookManager;
+use agent_webhooks::WebhookManager;
+use extractor::Client;
 
 const CONFIG_FN: &str = "agent.toml";
 

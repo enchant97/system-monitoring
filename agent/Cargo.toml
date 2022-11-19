@@ -7,14 +7,13 @@ edition = "2021"
 agent-core = { path = "../crates/core" }
 agent-collector = { path = "../crates/collector" }
 agent-config = { path = "../crates/config", default-features = false }
+agent-webhooks = { path = "../crates/webhooks", optional = true }
 actix-web = { version = "4.1", features = ["openssl"] }
 openssl = { version = "0.10", features = ["v110"] }
 log = "0.4"
 env_logger = "0.9"
-reqwest = { version = "0.11", optional = true  }
-serde_json = { version = "1.0", optional = true  }
 futures = { version = "0.3", optional = true }
 
 [features]
 default = [ "webhooks" ]
-webhooks = [ "dep:reqwest", "dep:serde_json", "dep:futures",  "agent-config/webhooks"]
+webhooks = [ "dep:futures",  "agent-config/webhooks", "dep:agent-webhooks"]
