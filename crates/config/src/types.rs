@@ -1,15 +1,7 @@
 use serde::Deserialize;
-use std::fs::read_to_string;
 use std::net::IpAddr;
 use std::path::PathBuf;
 use uuid::Uuid;
-
-pub const CONFIG_FN: &str = "agent.toml";
-
-pub enum ConfigError {
-    ReadError,
-    ParseError,
-}
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CertificateConfig {
@@ -87,16 +79,5 @@ impl Default for Config {
             #[cfg(feature = "webhooks")]
             webhooks: Default::default(),
         }
-    }
-}
-
-/// Read the agent config from a TOML file
-pub fn read_config_toml(path: &PathBuf) -> Result<Config, ConfigError> {
-    match read_to_string(path) {
-        Ok(raw) => match toml::from_str(&raw) {
-            Ok(config) => Ok(config),
-            Err(_) => Err(ConfigError::ParseError),
-        },
-        Err(_) => Err(ConfigError::ReadError),
     }
 }

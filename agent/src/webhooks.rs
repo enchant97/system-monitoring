@@ -1,4 +1,4 @@
-use crate::config::{Config, WebhooksHookConfig};
+use agent_config::types::{Config, WebhooksHookConfig};
 use agent_core::webhooks::BaseBody;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;

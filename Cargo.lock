@@ -217,6 +217,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent-config"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "toml",
+ "uuid",
+]
+
+[[package]]
 name = "agent-core"
 version = "0.1.0"
 dependencies = [
@@ -914,16 +923,14 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "agent-collector",
+ "agent-config",
  "agent-core",
  "env_logger",
  "futures",
  "log",
  "openssl",
  "reqwest",
- "serde",
  "serde_json",
- "toml",
- "uuid",
 ]
 
 [[package]]

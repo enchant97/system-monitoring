@@ -1,18 +1,19 @@
 use actix_web::{get, middleware::Logger, web, web::Json, App, HttpServer};
 use agent_collector::CollectorState;
+use agent_config::{readers::from_toml, types::Config};
 use agent_core::metrics;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::time::Duration;
 
-mod config;
 mod extractor;
 #[cfg(feature = "webhooks")]
 mod webhooks;
 
-use config::{read_config_toml, Config, CONFIG_FN};
 use extractor::Client;
 #[cfg(feature = "webhooks")]
 use webhooks::WebhookManager;
+
+const CONFIG_FN: &str = "agent.toml";
 
 #[get("/is-healthy")]
 async fn get_is_healthy() -> actix_web::Result<String> {
@@ -105,7 +106,7 @@ async fn main() -> std::io::Result<()> {
     // Load agent config
     let config_path = std::path::PathBuf::from(CONFIG_FN);
     let config: Config = match config_path.is_file() {
-        true => match read_config_toml(&config_path) {
+        true => match from_toml(&config_path) {
             Ok(v) => {
                 log::debug!("Interpreted config file as: {v:?}");
                 v

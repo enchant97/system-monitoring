@@ -1,8 +1,8 @@
-use crate::config::Config;
 use actix_web::{
     dev::Payload, error::ErrorUnauthorized, http::header::HeaderValue, Error, FromRequest,
     HttpRequest,
 };
+use agent_config::types::Config;
 use core::future::Future;
 use std::net::IpAddr;
 use std::pin::Pin;
