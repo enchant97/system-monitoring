@@ -33,20 +33,23 @@ pub async fn run(config: Config, collector: CollectorState) -> std::io::Result<(
             .app_data(web::Data::new(config.clone()))
             .service(routes::get_is_healthy)
             .service(routes::get_agent_id)
-            .service(routes::get_all)
             .service(
-                web::scope("/cpu").service(routes::get_cpu).service(
-                    web::scope("/load")
-                        .service(routes::get_cpu_load)
-                        .service(routes::get_cpu_load_average)
-                        .service(routes::get_cpu_load_per_core),
-                ),
-            )
-            .service(
-                web::scope("memory")
-                    .service(routes::get_memory)
-                    .service(routes::get_memory_perc_used)
-                    .service(routes::get_memory_detailed),
+                web::scope("/metrics")
+                    .service(routes::get_all)
+                    .service(
+                        web::scope("/cpu").service(routes::get_cpu).service(
+                            web::scope("/load")
+                                .service(routes::get_cpu_load)
+                                .service(routes::get_cpu_load_average)
+                                .service(routes::get_cpu_load_per_core),
+                        ),
+                    )
+                    .service(
+                        web::scope("/memory")
+                            .service(routes::get_memory)
+                            .service(routes::get_memory_perc_used)
+                            .service(routes::get_memory_detailed),
+                    ),
             )
     });
 
