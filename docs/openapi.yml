@@ -1,0 +1,158 @@
+openapi: 3.0.0
+info:
+  title: System Monitoring Agent
+  description: "A monitoring agent to report system statistics to one or many listeners"
+  version: 0.1.0
+
+paths:
+  /is-healthy:
+    get:
+      summary: "Check health of agent"
+      responses:
+        200:
+          description: "Agent is OK"
+  /metrics:
+    get:
+      summary: "Get all available metrics"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Metrics" }
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/cpu:
+    get:
+      summary: "Get just cpu metrics"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CpuMetrics" }
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/cpu/load/:
+    get:
+      summary: "Get just cpu load metrics"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CpuLoadMetrics" }
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/cpu/load/average:
+    get:
+      summary: "Get just cpu average load"
+      responses:
+        200:
+          description: ""
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/cpu/load/per-core:
+    get:
+      summary: "Get just cpu load per-core"
+      responses:
+        200:
+          description: ""
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/memory/:
+    get:
+      summary: "Get just memory metrics"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MemoryMetrics" }
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/memory/perc-used:
+    get:
+      summary: "Get percent of memory used"
+      responses:
+        200:
+          description: ""
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+  /metrics/memory/detailed:
+    get:
+      summary: "Get detailed memory metrics"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MemoryDetailedMetrics" }
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    CpuLoadMetrics:
+      required:
+        - "average"
+      properties:
+        average:
+          type: number
+        per_core:
+          type: array
+          items:
+            type: number
+    CpuMetrics:
+      properties:
+        load:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/CpuLoadMetrics"
+    MemoryDetailedMetrics:
+      required:
+        - "total"
+        - "available"
+        - "used"
+        - "free"
+      properties:
+        total:
+          type: integer
+        available:
+          type: integer
+        used:
+          type: integer
+        free:
+          type: integer
+    MemoryMetrics:
+      required:
+        - "perc_used"
+      properties:
+        perc_used:
+          type: number
+        detailed:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/MemoryDetailedMetrics"
+    Metrics:
+      required:
+        - "cpu"
+        - "memory"
+      properties:
+        cpu:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/CpuMetrics"
+        memory:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/MemoryMetrics"
+
+  responses:
+    UnauthorizedError:
+      description: "Authentication is required to access content"

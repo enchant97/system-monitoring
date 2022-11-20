@@ -62,16 +62,7 @@ Authorization: Bearer testing123
 ```
 
 ### Routes
-
-- /
-  - /is-healthy
-  - /cpu/
-    - /load/
-      - /average
-      - /per-core
-  - /memory/
-    - /perc-used
-    - /detailed
+Documented in the OpenAPI spec in [openapi.yml](openapi.yml)
 
 ## Webhooks
 If was built with webhooks support, agent will support sending webhooks to external devices.
