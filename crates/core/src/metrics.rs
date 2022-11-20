@@ -43,7 +43,7 @@ impl CapturedMetrics {
     pub fn new_from_now(metrics: Metrics) -> Self {
         Self {
             captured_at: SystemTime::now(),
-            metrics: metrics,
+            metrics,
         }
     }
     pub fn is_old(&self, duration: Duration) -> bool {

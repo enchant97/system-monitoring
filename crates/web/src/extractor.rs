@@ -37,7 +37,7 @@ fn get_client_ip(config: &Config, req: &HttpRequest) -> Option<IpAddr> {
         true => req.connection_info().realip_remote_addr()?.to_string(),
     };
 
-    Some(ip.parse::<IpAddr>().ok()?)
+    ip.parse::<IpAddr>().ok()
 }
 
 impl FromRequest for Client {

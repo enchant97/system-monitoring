@@ -44,7 +44,10 @@ async fn main() -> std::io::Result<()> {
     if cfg!(feature = "webhooks") {
         // TODO switch to std::futures when it's out of experimental
         #[cfg(feature = "webhooks")]
-        futures::try_join!(server, async { Ok(webhook_manager.send_on_start().await) })?;
+        futures::try_join!(server, async {
+            webhook_manager.send_on_start().await;
+            Ok(())
+        })?;
         Ok(())
     } else {
         server.await

@@ -86,12 +86,12 @@ impl<'a> WebhookManager {
         };
     }
     /// Sends webhook to all clients concurrently
-    async fn send_to_clients(&self, body: BaseBody, clients: &Vec<WebhooksHookConfig>) {
+    async fn send_to_clients(&self, body: BaseBody, clients: &[WebhooksHookConfig]) {
         let raw_body = serde_json::to_string(&body).expect("unable to serialize webhook");
         // TODO switch to std::futures when it's out of experimental
         let to_send = clients
             .iter()
-            .map(|hook| self.send_to_client(&raw_body, &hook, &body.hook_type));
+            .map(|hook| self.send_to_client(&raw_body, hook, &body.hook_type));
         futures::future::join_all(to_send).await;
     }
     pub async fn send_on_start(&self) {

@@ -16,7 +16,7 @@ impl CollectorState {
     pub fn new(cache_for: Duration) -> Self {
         log::debug!("Captured metrics will cache for '{cache_for:?}'");
         Self {
-            cache_for: cache_for,
+            cache_for,
             metrics: RwLock::new(None),
             cpu_collector: Mutex::new(CpuPercentCollector::new().unwrap()),
         }
@@ -25,19 +25,18 @@ impl CollectorState {
     fn get_cpu_metrics(&self) -> CpuMetrics {
         let mut cpu = self.cpu_collector.lock().unwrap();
 
-        let cpu_metrics = CpuMetrics {
+        CpuMetrics {
             load: Some(CpuLoadMetrics {
                 average: cpu.cpu_percent().unwrap(),
                 per_core: Some(cpu.cpu_percent_percpu().unwrap()),
             }),
-        };
-        cpu_metrics
+        }
     }
     /// Gather & return memory metrics
     fn get_memory_metrics(&self) -> MemoryMetrics {
         let memory = psutil::memory::virtual_memory().unwrap();
 
-        let memory_metrics = MemoryMetrics {
+        MemoryMetrics {
             perc_used: memory.percent(),
             detailed: Some(MemoryDetailedMetrics {
                 total: memory.total(),
@@ -45,15 +44,14 @@ impl CollectorState {
                 used: memory.used(),
                 free: memory.free(),
             }),
-        };
-        memory_metrics
+        }
     }
     /// Return new metrics, skipping cache
     pub fn metrics_skip_cache(&self) -> CapturedMetrics {
-        return CapturedMetrics::new_from_now(Metrics {
+        CapturedMetrics::new_from_now(Metrics {
             cpu: self.get_cpu_metrics(),
             memory: self.get_memory_metrics(),
-        });
+        })
     }
     /// Return metrics, using cached if valid
     pub fn metrics(&self) -> CapturedMetrics {
