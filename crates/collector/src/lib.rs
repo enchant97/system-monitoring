@@ -1,5 +1,5 @@
 use agent_core::metrics::{
-    CapturedMetrics, CpuLoadMetric, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
+    CapturedMetrics, CpuLoadMetrics, CpuMetrics, MemoryDetailedMetrics, MemoryMetrics, Metrics,
 };
 use psutil::cpu::CpuPercentCollector;
 use std::sync::{Mutex, RwLock};
@@ -26,7 +26,7 @@ impl CollectorState {
         let mut cpu = self.cpu_collector.lock().unwrap();
 
         let cpu_metrics = CpuMetrics {
-            load: Some(CpuLoadMetric {
+            load: Some(CpuLoadMetrics {
                 average: cpu.cpu_percent().unwrap(),
                 per_core: Some(cpu.cpu_percent_percpu().unwrap()),
             }),

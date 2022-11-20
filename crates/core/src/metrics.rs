@@ -3,14 +3,14 @@ use serde::Serialize;
 use std::time::{Duration, SystemTime};
 
 #[derive(Debug, Clone, Serialize)]
-pub struct CpuLoadMetric {
+pub struct CpuLoadMetrics {
     pub average: Percent,
     pub per_core: Option<Vec<Percent>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CpuMetrics {
-    pub load: Option<CpuLoadMetric>,
+    pub load: Option<CpuLoadMetrics>,
 }
 
 #[derive(Debug, Clone, Serialize)]

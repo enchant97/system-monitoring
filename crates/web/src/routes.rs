@@ -40,7 +40,7 @@ pub(crate) async fn get_cpu(
 pub(crate) async fn get_cpu_load(
     _client: Client,
     collector: web::Data<CollectorState>,
-) -> actix_web::Result<Json<metrics::CpuLoadMetric>> {
+) -> actix_web::Result<Json<metrics::CpuLoadMetrics>> {
     let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load))
 }
