@@ -109,9 +109,42 @@ impl<'a> WebhookManager {
         join_all(senders).await;
     }
 
+    async fn send_interval_pings(&self) {
+        let hook_type = "ping".to_string();
+        let senders = self
+            .config
+            .webhooks
+            .interval_pings
+            .iter()
+            .map(|client| async {
+                let mut interval = interval(Duration::from_secs(client.interval));
+                let client_config = WebhooksHookConfig {
+                    url: client.url.clone(),
+                    secret: client.secret.clone(),
+                };
+                loop {
+                    interval.tick().await;
+                    let body = BaseBody {
+                        agent_id: self.config.id.clone(),
+                        sent_at: SystemTime::now(),
+                        hook_type: hook_type.clone(),
+                    };
+                    let raw_body =
+                        serde_json::to_string(&body).expect("unable to serialize webhook");
+                    self.send_to_client(&raw_body, &client_config, &hook_type)
+                        .await;
+                }
+            });
+        join_all(senders).await;
+    }
+
     // run all async tasks, best used with tokio::spawn to allow aborting.
     async fn run(&self) {
-        join!(self.send_on_start(), self.send_interval_metrics());
+        join!(
+            self.send_on_start(),
+            self.send_interval_pings(),
+            self.send_interval_metrics()
+        );
     }
 }
 

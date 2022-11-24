@@ -43,13 +43,14 @@ url = "http://localhost:8888/my-hook"
 # Optional secret to sign the request body using X-Hub-Signature-256
 secret = "my_secret"
 
+# Regular pings
+[[webhooks.interval_pings]]
+# interval in seconds
+interval = 10
+
 # Regular metric updates
 [[webhooks.interval_metrics]]
-# Where to send hook
-url = "http://localhost:8888/my-hook"
-# Optional secret to sign the request body using X-Hub-Signature-256
-secret = "my_secret"
-# seconds until update
+# interval in seconds
 interval = 15
 ```
 

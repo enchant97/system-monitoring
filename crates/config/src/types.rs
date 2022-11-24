@@ -51,6 +51,7 @@ pub struct WebhooksHookConfigIntervalMetrics {
 pub struct WebhooksConfig {
     /// Webhook triggered when agent is starting
     pub on_start: Vec<WebhooksHookConfig>,
+    pub interval_pings: Vec<WebhooksHookConfigIntervalMetrics>,
     pub interval_metrics: Vec<WebhooksHookConfigIntervalMetrics>,
 }
 
