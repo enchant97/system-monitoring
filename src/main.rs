@@ -1,9 +1,10 @@
 use agent_collector::CollectorState;
 use agent_config::{readers::from_toml, types::Config};
+use std::sync::Arc;
 use std::time::Duration;
 
-#[cfg(feature = "webhooks")]
-use agent_webhooks::WebhookManager;
+// #[cfg(feature = "webhooks")]
+// use agent_webhooks::WebhookManager;
 
 const CONFIG_FN: &str = "agent.toml";
 
@@ -32,20 +33,20 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    let collector = Arc::new(CollectorState::new(Duration::from_secs(config.cache_for)));
+
+    let server = agent_web::run(&config, collector.clone());
+
     // Init Webhook if feature is enabled
     #[cfg(feature = "webhooks")]
-    let webhook_manager = WebhookManager::new(config.clone());
-
-    let collector = CollectorState::new(Duration::from_secs(config.cache_for));
-
-    let server = agent_web::run(config, collector);
+    let webhook_server = agent_webhooks::run(&config, collector.clone());
 
     // Send on_start webhook and start server, if feature is enabled
     if cfg!(feature = "webhooks") {
         // TODO switch to std::futures when it's out of experimental
         #[cfg(feature = "webhooks")]
         futures::try_join!(server, async {
-            webhook_manager.send_on_start().await;
+            webhook_server.await;
             Ok(())
         })?;
         Ok(())

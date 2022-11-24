@@ -2,12 +2,13 @@ use actix_web::{middleware::Logger, web, App, HttpServer};
 use agent_collector::CollectorState;
 use agent_config::types::Config;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use std::sync::Arc;
 
 mod extractor;
 mod routes;
 
-pub async fn run(config: Config, collector: CollectorState) -> std::io::Result<()> {
-    let collector = web::Data::new(collector);
+pub async fn run(config: &Config, collector: Arc<CollectorState>) -> std::io::Result<()> {
+    let config = config.clone();
     // Create the HTTP server
     let bind = (config.host.clone(), config.port);
     let ssl_builder = match config.certificate {
@@ -29,7 +30,7 @@ pub async fn run(config: Config, collector: CollectorState) -> std::io::Result<(
     let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .app_data(collector.clone())
+            .app_data(web::Data::new(collector.clone()))
             .app_data(web::Data::new(config.clone()))
             .service(routes::get_is_healthy)
             .service(routes::get_agent_id)

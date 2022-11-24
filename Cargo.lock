@@ -248,6 +248,7 @@ dependencies = [
 name = "agent-webhooks"
 version = "0.1.0"
 dependencies = [
+ "agent-collector",
  "agent-config",
  "agent-core",
  "futures",

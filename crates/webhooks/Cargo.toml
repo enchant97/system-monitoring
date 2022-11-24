@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+agent-collector = { path = "../collector" }
 agent-core = { path = "../core" }
 agent-config = { path = "../config", default-features = false, features = ["webhooks"] }
 openssl = { version = "0.10", features = ["v110"] }

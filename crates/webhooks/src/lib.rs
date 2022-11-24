@@ -1,3 +1,4 @@
+use agent_collector::CollectorState;
 use agent_config::types::{Config, WebhooksHookConfig};
 use agent_core::webhooks::BaseBody;
 use openssl::hash::MessageDigest;
@@ -8,6 +9,7 @@ use reqwest::{
     redirect::Policy,
     Client,
 };
+use std::sync::Arc;
 use std::time::SystemTime;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
@@ -37,16 +39,18 @@ fn new_client() -> Client {
         .expect("unable to build webhook client")
 }
 
-pub struct WebhookManager {
+struct WebhookManager {
     client: Client,
     config: Config,
+    collector: Arc<CollectorState>,
 }
 
 impl<'a> WebhookManager {
-    pub fn new(config: Config) -> Self {
+    fn new(config: Config, collector: Arc<CollectorState>) -> Self {
         Self {
             client: new_client(),
             config,
+            collector,
         }
     }
     /// Send webook to client, signing the body if required
@@ -94,7 +98,7 @@ impl<'a> WebhookManager {
             .map(|hook| self.send_to_client(&raw_body, hook, &body.hook_type));
         futures::future::join_all(to_send).await;
     }
-    pub async fn send_on_start(&self) {
+    async fn send_on_start(&self) {
         let body = BaseBody {
             agent_id: self.config.id.clone(),
             sent_at: SystemTime::now(),
@@ -103,4 +107,12 @@ impl<'a> WebhookManager {
         self.send_to_clients(body, &self.config.webhooks.on_start)
             .await;
     }
+    async fn run(&self) {
+        self.send_on_start().await;
+    }
+}
+
+pub async fn run(config: &Config, collector: Arc<CollectorState>) {
+    let webhook_manager = WebhookManager::new(config.clone(), collector.clone());
+    webhook_manager.run().await
 }
