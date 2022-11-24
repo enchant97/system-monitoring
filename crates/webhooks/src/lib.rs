@@ -1,6 +1,6 @@
 use agent_collector::CollectorState;
 use agent_config::types::{Config, WebhooksHookConfig};
-use agent_core::webhooks::{BaseBody, MetricsBody};
+use agent_core::webhooks::{BaseBody, HookTypes, MetricsBody};
 use futures::{future::join_all, join};
 use reqwest::Client;
 use std::sync::Arc;
@@ -29,7 +29,7 @@ impl<'a> WebhookManager {
         &self,
         raw_body: &String,
         client: &WebhooksHookConfig,
-        hook_type: &String,
+        hook_type: &HookTypes,
     ) {
         let mut response = self.client.post(client.url.clone()).body(raw_body.clone());
         if client.secret.is_some() {
@@ -41,17 +41,17 @@ impl<'a> WebhookManager {
         }
         let response = response.send().await;
         match response {
-            Err(err) => log::error!("failed to send webhook '{}' due to '{}'", hook_type, err),
+            Err(err) => log::error!("failed to send webhook '{:?}' due to '{}'", hook_type, err),
             Ok(resp) => {
                 if resp.status().is_success() {
                     log::info!(
-                        "success sending webhook '{}' to '{}'",
+                        "success sending webhook '{:?}' to '{}'",
                         hook_type,
                         client.url,
                     );
                 } else {
                     log::error!(
-                        "failed to send webhook '{}' to '{}' status code was '{}'",
+                        "failed to send webhook '{:?}' to '{}' status code was '{}'",
                         hook_type,
                         client.url,
                         resp.status()
@@ -73,13 +73,12 @@ impl<'a> WebhookManager {
         let body = BaseBody {
             agent_id: self.config.id.clone(),
             sent_at: SystemTime::now(),
-            hook_type: "on_start".to_string(),
+            hook_type: HookTypes::OnStart,
         };
         self.send_to_clients(body, &self.config.webhooks.on_start)
             .await;
     }
     async fn send_interval_metrics(&self) {
-        let hook_type = "metrics".to_string();
         let senders = self
             .config
             .webhooks
@@ -97,12 +96,12 @@ impl<'a> WebhookManager {
                     let body = MetricsBody {
                         agent_id: self.config.id.clone(),
                         sent_at: SystemTime::now(),
-                        hook_type: hook_type.clone(),
+                        hook_type: HookTypes::Metrics,
                         metrics: metrics.metrics,
                     };
                     let raw_body =
                         serde_json::to_string(&body).expect("unable to serialize webhook");
-                    self.send_to_client(&raw_body, &client_config, &hook_type)
+                    self.send_to_client(&raw_body, &client_config, &HookTypes::Metrics)
                         .await;
                 }
             });
@@ -110,7 +109,6 @@ impl<'a> WebhookManager {
     }
 
     async fn send_interval_pings(&self) {
-        let hook_type = "ping".to_string();
         let senders = self
             .config
             .webhooks
@@ -127,11 +125,11 @@ impl<'a> WebhookManager {
                     let body = BaseBody {
                         agent_id: self.config.id.clone(),
                         sent_at: SystemTime::now(),
-                        hook_type: hook_type.clone(),
+                        hook_type: HookTypes::Ping,
                     };
                     let raw_body =
                         serde_json::to_string(&body).expect("unable to serialize webhook");
-                    self.send_to_client(&raw_body, &client_config, &hook_type)
+                    self.send_to_client(&raw_body, &client_config, &HookTypes::Ping)
                         .await;
                 }
             });
