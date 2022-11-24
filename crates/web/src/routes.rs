@@ -2,6 +2,7 @@ use actix_web::{get, web, web::Json};
 use agent_collector::CollectorState;
 use agent_config::types::Config;
 use agent_core::metrics;
+use std::sync::Arc;
 
 use crate::extractor::Client;
 
@@ -21,7 +22,7 @@ pub(crate) async fn get_agent_id(
 #[get("/")]
 pub(crate) async fn get_all(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<metrics::Metrics>> {
     let captured_metrics = collector.metrics();
     Ok(Json(captured_metrics.metrics))
@@ -30,7 +31,7 @@ pub(crate) async fn get_all(
 #[get("/")]
 pub(crate) async fn get_cpu(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<metrics::CpuMetrics>> {
     let cpu_metrics = collector.metrics().metrics.cpu;
     Ok(Json(cpu_metrics))
@@ -39,7 +40,7 @@ pub(crate) async fn get_cpu(
 #[get("/")]
 pub(crate) async fn get_cpu_load(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<metrics::CpuLoadMetrics>> {
     let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load))
@@ -48,7 +49,7 @@ pub(crate) async fn get_cpu_load(
 #[get("/average")]
 pub(crate) async fn get_cpu_load_average(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<agent_core::Percent>> {
     let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load.average))
@@ -57,7 +58,7 @@ pub(crate) async fn get_cpu_load_average(
 #[get("/per-core")]
 pub(crate) async fn get_cpu_load_per_core(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<Vec<agent_core::Percent>>> {
     let load = collector.metrics().metrics.cpu.load.unwrap();
     Ok(Json(load.per_core.unwrap()))
@@ -66,7 +67,7 @@ pub(crate) async fn get_cpu_load_per_core(
 #[get("/")]
 pub(crate) async fn get_memory(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<metrics::MemoryMetrics>> {
     let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics))
@@ -75,7 +76,7 @@ pub(crate) async fn get_memory(
 #[get("/perc-used")]
 pub(crate) async fn get_memory_perc_used(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<agent_core::Percent>> {
     let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics.perc_used))
@@ -84,7 +85,7 @@ pub(crate) async fn get_memory_perc_used(
 #[get("/detailed")]
 pub(crate) async fn get_memory_detailed(
     _client: Client,
-    collector: web::Data<CollectorState>,
+    collector: web::Data<Arc<CollectorState>>,
 ) -> actix_web::Result<Json<metrics::MemoryDetailedMetrics>> {
     let memory_metrics = collector.metrics().metrics.memory;
     Ok(Json(memory_metrics.detailed.unwrap()))
