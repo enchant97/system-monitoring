@@ -47,7 +47,7 @@ pub struct WebhooksHookConfigIntervalMetrics {
 }
 
 impl WebhooksHookConfigIntervalMetrics {
-    pub fn into_base(&self) -> WebhooksHookConfig{
+    pub fn into_base(&self) -> WebhooksHookConfig {
         WebhooksHookConfig {
             url: self.url.clone(),
             secret: self.secret.clone(),
@@ -73,6 +73,7 @@ pub struct Config {
     pub port: u16,
     pub using_proxy: bool,
     pub cache_for: u64,
+    pub timeout: u64,
     pub certificate: Option<CertificateConfig>,
     pub authentication: AuthenticationConfig,
     #[cfg(feature = "webhooks")]
@@ -88,6 +89,7 @@ impl Default for Config {
             port: 9090,
             using_proxy: false,
             cache_for: 1,
+            timeout: 4,
             certificate: None,
             authentication: Default::default(),
             #[cfg(feature = "webhooks")]

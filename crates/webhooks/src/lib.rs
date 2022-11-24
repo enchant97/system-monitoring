@@ -4,8 +4,9 @@ use agent_core::webhooks::{BaseBody, HookTypes, MetricsBody};
 use futures::{future::join_all, join};
 use reqwest::Client;
 use std::sync::Arc;
-use std::time::SystemTime;
-use tokio::time::{interval, Duration};
+use std::time::{Duration, SystemTime};
+use tokio::time::interval;
+
 mod helpers;
 
 use helpers::{new_client, sign_body};
@@ -19,7 +20,7 @@ struct WebhookManager {
 impl<'a> WebhookManager {
     fn new(config: Config, collector: Arc<CollectorState>) -> Self {
         Self {
-            client: new_client(),
+            client: new_client(Duration::from_secs(config.timeout)),
             config,
             collector,
         }

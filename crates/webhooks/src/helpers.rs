@@ -6,6 +6,7 @@ use reqwest::{
     redirect::Policy,
     Client,
 };
+use std::time::Duration;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
@@ -23,13 +24,14 @@ pub fn sign_body(body: &String, secret: String) -> String {
 }
 
 /// Create a client ready for sending webhook requests
-pub fn new_client() -> Client {
+pub fn new_client(timeout: Duration) -> Client {
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", HeaderValue::from_static("application/json"));
     Client::builder()
         .user_agent(USER_AGENT)
         .redirect(Policy::none())
         .default_headers(headers)
+        .timeout(timeout)
         .build()
         .expect("unable to build webhook client")
 }

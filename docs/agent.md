@@ -15,6 +15,8 @@ port=8080
 using_proxy = false
 # duration to cache metrics for future requests in seconds
 cache_for = 2
+# time to wait until dropping connection
+timeout = 4
 
 
 [certificates]
