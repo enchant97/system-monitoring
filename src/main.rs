@@ -1,15 +1,18 @@
+#[cfg(not(any(feature = "webhooks", feature = "web")))]
+compile_error!("a server feature must be enabled: 'webhooks', 'web'");
+#[cfg(all(feature = "webhooks", feature = "web"))]
+#[cfg(not(feature = "multi"))]
+compile_error!("'multi' feature must be enabled to use multiple servers");
+
 use agent_collector::CollectorState;
 use agent_config::{readers::from_toml, types::Config};
 use std::sync::Arc;
 use std::time::Duration;
 
-// #[cfg(feature = "webhooks")]
-// use agent_webhooks::WebhookManager;
-
 const CONFIG_FN: &str = "agent.toml";
 
 #[tokio::main]
-async fn main() -> std::io::Result<()> {
+async fn main() {
     env_logger::init();
     if !cfg!(feature = "webhooks") {
         log::info!("built without webhooks");
@@ -35,22 +38,27 @@ async fn main() -> std::io::Result<()> {
 
     let collector = Arc::new(CollectorState::new(Duration::from_secs(config.cache_for)));
 
-    let server = agent_web::run(&config, collector.clone());
+    #[cfg(feature = "web")]
+    let web_server = agent_web::run(&config, collector.clone());
 
     // Init Webhook if feature is enabled
     #[cfg(feature = "webhooks")]
     let webhook_server = agent_webhooks::run(&config, collector.clone());
 
     // Send on_start webhook and start server, if feature is enabled
-    if cfg!(feature = "webhooks") {
+    if cfg!(all(feature = "webhooks", feature = "web")) {
         // TODO switch to std::futures when it's out of experimental
-        #[cfg(feature = "webhooks")]
-        futures::try_join!(server, async {
+        #[cfg(all(feature = "webhooks", feature = "web", feature = "multi"))]
+        futures::try_join!(web_server, async {
             webhook_server.await;
             Ok(())
-        })?;
-        Ok(())
-    } else {
-        server.await
+        })
+        .unwrap();
+    } else if cfg!(all(feature = "webhooks")) {
+        #[cfg(feature = "webhooks")]
+        webhook_server.await;
+    } else if cfg!(all(feature = "web")) {
+        #[cfg(feature = "web")]
+        web_server.await.unwrap();
     }
 }

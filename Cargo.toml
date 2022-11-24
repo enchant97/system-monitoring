@@ -11,7 +11,7 @@ members = [
 [dependencies]
 agent-collector = { path = "./crates/collector" }
 agent-config = { path = "./crates/config", default-features = false }
-agent-web = { path = "./crates/web" }
+agent-web = { path = "./crates/web", optional = true }
 agent-webhooks = { path = "./crates/webhooks", optional = true }
 log = "0.4"
 env_logger = "0.9"
@@ -19,5 +19,7 @@ futures = { version = "0.3", optional = true }
 tokio = { version = "1.22", features=["macros", "rt-multi-thread"]  }
 
 [features]
-default = [ "webhooks" ]
-webhooks = [ "dep:futures",  "agent-config/webhooks", "dep:agent-webhooks"]
+default = [ "webhooks", "web", "multi" ]
+web = ["agent-web"]
+webhooks = [ "agent-config/webhooks", "dep:agent-webhooks"]
+multi = [ "dep:futures" ]
