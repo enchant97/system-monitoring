@@ -46,6 +46,15 @@ pub struct WebhooksHookConfigIntervalMetrics {
     pub interval: u64,
 }
 
+impl WebhooksHookConfigIntervalMetrics {
+    pub fn into_base(&self) -> WebhooksHookConfig{
+        WebhooksHookConfig {
+            url: self.url.clone(),
+            secret: self.secret.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Default)]
 #[serde(default)]
 pub struct WebhooksConfig {

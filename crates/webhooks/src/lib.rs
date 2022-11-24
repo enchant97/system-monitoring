@@ -86,10 +86,7 @@ impl<'a> WebhookManager {
             .iter()
             .map(|client| async {
                 let mut interval = interval(Duration::from_secs(client.interval));
-                let client_config = WebhooksHookConfig {
-                    url: client.url.clone(),
-                    secret: client.secret.clone(),
-                };
+                let client_config = client.into_base();
                 loop {
                     interval.tick().await;
                     let metrics = self.collector.metrics();
@@ -116,10 +113,7 @@ impl<'a> WebhookManager {
             .iter()
             .map(|client| async {
                 let mut interval = interval(Duration::from_secs(client.interval));
-                let client_config = WebhooksHookConfig {
-                    url: client.url.clone(),
-                    secret: client.secret.clone(),
-                };
+                let client_config = client.into_base();
                 loop {
                     interval.tick().await;
                     let body = BaseBody {
