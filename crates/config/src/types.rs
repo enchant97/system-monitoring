@@ -38,16 +38,20 @@ pub struct WebhooksHookConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct WebhooksHookConfigIntervalMetrics {
+    /// Where to send the request
+    pub url: String,
+    /// Used when signing the body with HMAC
+    pub secret: Option<String>,
+    pub interval: u64,
+}
+
+#[derive(Debug, Clone, Deserialize, Default)]
 #[serde(default)]
 pub struct WebhooksConfig {
     /// Webhook triggered when agent is starting
     pub on_start: Vec<WebhooksHookConfig>,
-}
-
-impl Default for WebhooksConfig {
-    fn default() -> Self {
-        WebhooksConfig { on_start: vec![] }
-    }
+    pub interval_metrics: Vec<WebhooksHookConfigIntervalMetrics>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

@@ -256,6 +256,7 @@ dependencies = [
  "openssl",
  "reqwest",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
