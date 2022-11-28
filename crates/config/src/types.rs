@@ -30,6 +30,27 @@ impl Default for AuthenticationConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct WebConfig {
+    pub host: String,
+    pub port: u16,
+    pub using_proxy: bool,
+    pub certificate: Option<CertificateConfig>,
+    pub authentication: AuthenticationConfig,
+}
+
+impl Default for WebConfig {
+    fn default() -> Self {
+        WebConfig {
+            host: "127.0.0.1".to_string(),
+            port: 9090,
+            using_proxy: false,
+            certificate: None,
+            authentication: Default::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct WebhooksHookConfig {
     /// Where to send the request
     pub url: String,
@@ -69,13 +90,10 @@ pub struct WebhooksConfig {
 pub struct Config {
     /// Agent id; used in webhooks, should be unique if using multiple agents
     pub id: String,
-    pub host: String,
-    pub port: u16,
-    pub using_proxy: bool,
     pub cache_for: u64,
     pub timeout: u64,
-    pub certificate: Option<CertificateConfig>,
-    pub authentication: AuthenticationConfig,
+    #[cfg(feature = "web")]
+    pub web: WebConfig,
     #[cfg(feature = "webhooks")]
     pub webhooks: WebhooksConfig,
 }
@@ -85,13 +103,10 @@ impl Default for Config {
         let agent_uuid = Uuid::new_v4();
         Config {
             id: agent_uuid.to_string(),
-            host: "127.0.0.1".to_string(),
-            port: 9090,
-            using_proxy: false,
             cache_for: 1,
             timeout: 4,
-            certificate: None,
-            authentication: Default::default(),
+            #[cfg(feature = "web")]
+            web: Default::default(),
             #[cfg(feature = "webhooks")]
             webhooks: Default::default(),
         }

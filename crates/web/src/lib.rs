@@ -10,8 +10,8 @@ mod routes;
 pub async fn run(config: &Config, collector: Arc<CollectorState>) -> std::io::Result<()> {
     let config = config.clone();
     // Create the HTTP server
-    let bind = (config.host.clone(), config.port);
-    let ssl_builder = match config.certificate {
+    let bind = (config.web.host.clone(), config.web.port);
+    let ssl_builder = match config.web.certificate {
         Some(ref v) => {
             // TODO remove unwrap usage
             let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();

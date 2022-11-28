@@ -9,5 +9,6 @@ toml = "0.5"
 uuid = { version = "1.1", features = ["v4"]  }
 
 [features]
-default = ["webhooks"]
+default = ["web", "webhooks"]
+web = []
 webhooks = []

@@ -32,7 +32,7 @@ fn auth_value_allowed(value: Option<&HeaderValue>, allowed_keys: &[String]) -> O
 }
 
 fn get_client_ip(config: &Config, req: &HttpRequest) -> Option<IpAddr> {
-    let ip = match config.using_proxy {
+    let ip = match config.web.using_proxy {
         false => req.connection_info().peer_addr()?.to_string(),
         true => req.connection_info().realip_remote_addr()?.to_string(),
     };
@@ -48,7 +48,7 @@ impl FromRequest for Client {
         let config = req
             .app_data::<actix_web::web::Data<Config>>()
             .expect("Client app_data Config must not be None");
-        let auth_config = &config.authentication;
+        let auth_config = &config.web.authentication;
         let authorization_value = req.headers().get("Authorization");
         // get the clients ip address
         let client_ip = get_client_ip(config, req);

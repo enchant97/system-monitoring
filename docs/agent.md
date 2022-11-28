@@ -7,26 +7,27 @@ The agent app can be configured by a TOML file, this must exist in the directory
 ```toml
 # The unique name for the agent, if not given a uuid4 will be generated
 id = "agent-abc123"
-# what ip to bind to, use 0.0.0.0 for all
-host="127.0.0.1"
-# port to listen on
-port=8080
-# enable if using a reverse proxy so real client ip is forwarded
-using_proxy = false
 # duration to cache metrics for future requests in seconds
 cache_for = 2
 # time to wait until dropping connection
 timeout = 4
 
 
-[certificates]
+[web]
+# what ip to bind to, use 0.0.0.0 for all
+host="127.0.0.1"
+# port to listen on
+port=8080
+# enable if using a reverse proxy so real client ip is forwarded
+using_proxy = false
+
+[web.certificates]
 # Path to certificates, enables serving on HTTPS
 # Expects files in PEM format
 private_path = "key.pem"
 public_path = "cert.pem"
 
-
-[authentication]
+[web.authentication]
 # Whether to only allow registed ip's
 check_ip = true
 allowed_ip = ["127.0.0.1"]

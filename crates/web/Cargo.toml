@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 agent-core = { path = "../core" }
 agent-collector = { path = "../collector" }
-agent-config = { path = "../config", default-features = false }
+agent-config = { path = "../config", default-features = false, features = ["web"] }
 actix-web = { version = "4.1", features = ["openssl"] }
 openssl = { version = "0.10", features = ["v110"] }
 log = "0.4"
