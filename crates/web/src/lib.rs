@@ -30,7 +30,7 @@ pub async fn run(config: &Config, collector: Arc<CollectorState>) -> std::io::Re
     let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .app_data(web::Data::new(collector.clone()))
+            .app_data(web::Data::from(collector.clone()))
             .app_data(web::Data::new(config.clone()))
             .service(routes::get_is_healthy)
             .service(routes::get_agent_id)
